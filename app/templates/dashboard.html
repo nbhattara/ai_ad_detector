@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard — AI Ad Detection</title>
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg: #0f172a;
+      --bg-soft: #1e293b;
+      --surface: rgba(30,41,59,0.65);
+      --border: rgba(148,163,184,0.18);
+      --text: #e2e8f0;
+      --text-dim: #94a3b8;
+      --primary: #6366f1;
+      --primary-dark: #4f46e5;
+      --accent: #a78bfa;
+      --success: #22c55e;
+      --danger: #ef4444;
+      --radius: 12px;
+      --shadow-sm: 0 4px 6px rgba(0,0,0,0.1);
+      --shadow-md: 0 10px 15px rgba(0,0,0,0.2);
+      --transition: 0.25s cubic-bezier(0.4,0,0.2,1);
+    }
+
+    * { box-sizing: border-box; margin:0; padding:0; font-family:'Inter',sans-serif; }
+
+    body {
+      background: linear-gradient(135deg, var(--bg) 0%, #1e1b4b 100%);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 2rem;
+    }
+
+    .container {
+      max-width: 1280px;
+      margin: auto;
+    }
+
+    /* ── Header ── */
+    .header {
+      background: var(--surface);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem 2rem;
+      margin-bottom: 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      box-shadow: var(--shadow-md);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .header-title { font-size: 1.75rem; font-weight:700; color:white; }
+    .header-subtitle { font-size:0.95rem; color:var(--text-dim); }
+    .user-info { font-size:0.875rem; color:#cbd5e1; margin-top:0.25rem; }
+
+    .btn-logout {
+      background: rgba(99,102,241,0.18);
+      color:white;
+      border:1px solid rgba(99,102,241,0.3);
+      padding:0.6rem 1.5rem;
+      border-radius:8px;
+      font-weight:600;
+      cursor:pointer;
+      transition: all var(--transition);
+      backdrop-filter: blur(6px);
+    }
+
+    .btn-logout:hover {
+      background: rgba(99,102,241,0.32);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-sm);
+    }
+
+    /* ── Stats Cards ── */
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit,minmax(280px,1fr));
+      gap: 1.5rem;
+      margin-bottom: 2.5rem;
+    }
+
+    .stat-card {
+      background: var(--surface);
+      border:1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.75rem;
+      box-shadow: var(--shadow-sm);
+      transition: all var(--transition);
+    }
+
+    .stat-card:hover {
+      transform: translateY(-5px);
+      box-shadow: var(--shadow-md);
+    }
+
+    .stat-value { font-size:2.5rem; font-weight:700; margin-bottom:0.5rem; color:white; }
+    .stat-label { font-size:0.875rem; text-transform:uppercase; color:var(--text-dim); letter-spacing:0.05em; font-weight:600; }
+
+    /* ── Logs Table ── */
+    .logs-panel {
+      background: var(--surface);
+      border:1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 2rem;
+      box-shadow: var(--shadow-md);
+      overflow-x:auto;
+    }
+
+    .logs-panel h2 {
+      font-size:1.5rem;
+      font-weight:600;
+      margin-bottom:1.5rem;
+      color:white;
+    }
+
+    table {
+      width:100%;
+      border-collapse:collapse;
+    }
+
+    th, td { padding:0.875rem 1rem; text-align:left; }
+    th {
+      color:#cbd5e1;
+      font-weight:600;
+      font-size:0.8125rem;
+      text-transform:uppercase;
+      letter-spacing:0.04em;
+      border-bottom:1px solid rgba(148,163,184,0.15);
+      cursor:pointer;
+    }
+    td { color:var(--text); border-bottom:1px solid rgba(148,163,184,0.08); }
+    tr:hover td { background: rgba(99,102,241,0.08); }
+
+    /* Badges */
+    .badge {
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      padding:0.25em 0.75em;
+      border-radius:9999px;
+      font-size:0.75rem;
+      font-weight:600;
+      letter-spacing:0.02em;
+      border:1px solid;
+    }
+    .badge-features { background: rgba(99,102,241,0.15); color:#c7d2fe; border-color: rgba(99,102,241,0.35); }
+    .badge-text { background: rgba(168,85,247,0.15); color:#e9d5ff; border-color: rgba(168,85,247,0.35); }
+    .badge-ad { background: rgba(239,68,68,0.15); color:#fecaca; border-color: rgba(239,68,68,0.35); }
+    .badge-not-ad { background: rgba(34,197,94,0.15); color:#bbf7d0; border-color: rgba(34,197,94,0.35); }
+
+    .confidence-cell { min-width:140px; }
+    .progress-bg {
+      height:6px;
+      background: rgba(148,163,184,0.18);
+      border-radius:3px;
+      overflow:hidden;
+    }
+    .progress-fill {
+      height:100%;
+      background: linear-gradient(90deg,var(--primary),var(--accent));
+      border-radius:3px;
+      transition: width 1s ease-out;
+    }
+
+    @media(max-width:640px) {
+      .header { flex-direction:column; align-items:flex-start; }
+      .stats { grid-template-columns:1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+
+  <header class="header">
+    <div>
+      <h1 class="header-title">Admin Dashboard</h1>
+      <div class="header-subtitle">AI Advertisement Detection Platform</div>
+      <div class="user-info">Logged in as: <strong>{{ admin_username }}</strong></div>
+    </div>
+    <button class="btn-logout" onclick="logout()">Sign out</button>
+  </header>
+
+  <div class="stats">
+    <div class="stat-card">
+      <div class="stat-value">{{ total_users }}</div>
+      <div class="stat-label">Total Users</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">{{ total_detections }}</div>
+      <div class="stat-label">Total Detections</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">{{ total_ads }}</div>
+      <div class="stat-label">Ads Detected</div>
+    </div>
+  </div>
+
+  <section class="logs-panel">
+    <h2>Recent Detection Logs</h2>
+
+    <table id="logs-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Method</th>
+          <th>Prediction</th>
+          <th>Confidence</th>
+          <th>Timestamp</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for log in recent_logs %}
+        <tr>
+          <td>#{{ log.id }}</td>
+          <td><span class="badge badge-{{ log.input_type|lower }}">{{ log.input_type|upper }}</span></td>
+          <td><span class="badge badge-{{ 'ad' if log.prediction==1 else 'not-ad' }}">{{ 'Advertisement' if log.prediction==1 else 'Not Advertisement' }}</span></td>
+          <td class="confidence-cell">
+            <div class="confidence-value">{{ (log.confidence*100)|round(1) }}%</div>
+            <div class="progress-bg">
+              <div class="progress-fill" style="width: {{ (log.confidence*100)|round(1) }}%"></div>
+            </div>
+          </td>
+          <td>{{ log.timestamp.strftime('%Y-%m-%d %H:%M') }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+
+</div>
+
+<script>
+function logout() {
+  if(confirm("Sign out of the admin panel?")) {
+    localStorage.removeItem('admin_token');
+    window.location.href = '/';
+  }
+}
+
+// Animate progress bars
+document.addEventListener("DOMContentLoaded", function() {
+  document.querySelectorAll(".progress-fill").forEach(bar => {
+    let width = bar.style.width;
+    bar.style.width = "0%";
+    setTimeout(() => bar.style.width = width, 100);
+  });
+});
+</script>
+
+</body>
+</html>
